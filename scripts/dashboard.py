@@ -1,0 +1,145 @@
+# dashboard.py
+import os
+import pyodbc
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from olap_cube import generate_olap_report
+
+from settings import SQL_SERVER, SQL_DATABASE, FIGURES_DIR
+
+if not os.path.exists(FIGURES_DIR):
+    os.makedirs(FIGURES_DIR)
+
+# Set visual style
+sns.set_theme(style="whitegrid")
+plt.rcParams['figure.figsize'] = (12, 6)
+plt.rcParams['savefig.dpi'] = 300
+
+def get_connection():
+    conn_str = f"DRIVER={{SQL Server}};SERVER={SQL_SERVER};DATABASE={SQL_DATABASE};Trusted_Connection=yes;"
+    return pyodbc.connect(conn_str)
+
+def generate_charts():
+    conn = get_connection()
+    
+    # 1. Orders by Country (Horizontal Bar)
+    print("Generating: Orders by Country...")
+    df = pd.read_sql("SELECT c.Country, COUNT(f.OrderId) as OrderCount FROM FactOrders f JOIN DimCustomer c ON f.CustomerId = c.CustomerId GROUP BY c.Country ORDER BY OrderCount DESC", conn)
+    
+    plt.figure()
+    ax = sns.barplot(data=df.head(10), x="OrderCount", y="Country", palette="viridis", hue="Country", legend=False)
+    ax.set_title("Top 10 Active Countries", fontsize=16, fontweight='bold')
+    ax.set_xlabel("Number of Orders")
+    ax.set_ylabel("")
+    plt.tight_layout()
+    plt.savefig(f"{FIGURES_DIR}/orders_by_country.png")
+    plt.close()
+
+    # 2. Daily Order Trend (Line Chart)
+    print("Generating: Order Trend...")
+    query = """
+    SELECT FullDate, COUNT(OrderId) as DailyOrders 
+    FROM FactOrders f 
+    JOIN DimDate d ON f.DateId = d.DateId 
+    WHERE FullDate IS NOT NULL 
+    GROUP BY FullDate 
+    ORDER BY FullDate
+    """
+    df = pd.read_sql(query, conn)
+    
+    plt.figure()
+    # Enhanced Line Chart
+    sns.lineplot(data=df, x="FullDate", y="DailyOrders", color="#3498db", linewidth=3, marker="o", markersize=8, markerfacecolor="#e74c3c")
+    plt.fill_between(df["FullDate"], df["DailyOrders"], color="#3498db", alpha=0.15)
+    
+    # Titles and Labels
+    plt.title("Daily Orders Timeline & Volume", fontsize=18, fontweight='bold', pad=20)
+    plt.xlabel("Date", fontsize=12)
+    plt.ylabel("Number of Orders", fontsize=12)
+    
+    # Grid and Ticks
+    plt.grid(True, linestyle='--', alpha=0.6)
+    plt.xticks(rotation=45)
+    
+    # Annotate peaks
+    max_orders = df["DailyOrders"].max()
+    max_date = df.loc[df["DailyOrders"].idxmax(), "FullDate"]
+    plt.annotate(f'Peak: {max_orders}', xy=(max_date, max_orders), xytext=(max_date, max_orders + 1),
+                 arrowprops=dict(facecolor='black', shrink=0.05), fontsize=10, fontweight='bold')
+    
+    plt.tight_layout()
+    plt.savefig(f"{FIGURES_DIR}/orders_trend.png")
+    plt.close()
+
+    # 3. Employee Performance (Bar Chart)
+    print("Generating: Employee Performance...")
+    query = """
+    SELECT e.FirstName, COUNT(f.OrderId) as Orders 
+    FROM FactOrders f 
+    JOIN DimEmployee e ON f.EmployeeId = e.EmployeeId 
+    GROUP BY e.FirstName 
+    ORDER BY Orders DESC
+    """
+    df = pd.read_sql(query, conn)
+    
+    plt.figure()
+    sns.barplot(data=df, x="FirstName", y="Orders", palette="magma", hue="FirstName", legend=False)
+    plt.title("Employee Performance", fontsize=16, fontweight='bold')
+    plt.xlabel("Employee")
+    plt.ylabel("Total Orders Handled")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig(f"{FIGURES_DIR}/employee_performance.png")
+    plt.close()
+    
+    conn.close()
+
+def generate_html_report():
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Northwind B.I. Dashboard</title>
+        <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; color: #333; margin: 0; padding: 20px; }
+            header { text-align: center; margin-bottom: 40px; }
+            h1 { color: #2c3e50; }
+            .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 20px; max-width: 1400px; margin: 0 auto; }
+            .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            img { width: 100%; height: auto; border-radius: 4px; }
+            .footer { text-align: center; margin-top: 50px; color: #7f8c8d; font-size: 0.9em; }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Northwind Business Intelligence</h1>
+            <p>Automated Daily Report</p>
+        </header>
+        <div class="grid">
+            <div class="card">
+                <img src="orders_by_country.png" alt="Orders by Country">
+            </div>
+            <div class="card">
+                <img src="employee_performance.png" alt="Employee Performance">
+            </div>
+            <div class="card" style="grid-column: 1 / -1;">
+                <img src="orders_trend.png" alt="Orders Trend">
+            </div>
+        </div>
+        <div class="footer">
+            <p>Generated by Python automated pipeline</p>
+        </div>
+    </body>
+    </html>
+    """
+    with open(f"{FIGURES_DIR}/index.html", "w") as f:
+        f.write(html_content)
+    print(f"Dashboard generated at: {os.path.abspath(f'{FIGURES_DIR}/index.html')}")
+
+if __name__ == "__main__":
+    generate_charts()
+    generate_html_report()
+    generate_olap_report()
