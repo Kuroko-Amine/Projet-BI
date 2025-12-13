@@ -1,5 +1,5 @@
 import pyodbc
-server = r"WIN-4DQD0F0RTQ8\SQLANIS"
+server = r"asus_zakami\SQLAMINE"
 try:
     conn = pyodbc.connect(f"DRIVER={{SQL Server}};SERVER={server};DATABASE=master;Trusted_Connection=yes;")
     print("Connected to master successfully")
