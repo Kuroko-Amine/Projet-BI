@@ -13,7 +13,7 @@
    ```bash
    pip install pandas pyodbc openpyxl matplotlib seaborn
    ```
-2. Ensure SQL Server is running and accessible at `WIN-4DQD0F0RTQ8\SQLANIS`.
+2. Ensure SQL Server is running and accessible at `asus_zakami\SQLAMINE`.
 
 ## Execution
 
