@@ -186,6 +186,36 @@ def create_delivery_by_country(df):
     print(f"Saved {save_path}")
     return fig
 
+def create_employee_explorer(df):
+    """Create interactive sunburst chart for exploring employee activities"""
+    df['EmployeeName'] = df['FirstName'] + ' ' + df['LastName']
+    df['Year'] = df['FullDate'].dt.year
+    
+    # Hierarchical data: Employee -> Country -> Year
+    # We use size() to count orders
+    agg = df.groupby(['EmployeeName', 'Country_x', 'Year']).size().reset_index(name='OrderCount')
+    
+    fig = px.sunburst(
+        agg,
+        path=['EmployeeName', 'Country_x', 'Year'],
+        values='OrderCount',
+        title='Employee Explorer: Activity by Market and Year',
+        color='OrderCount',
+        color_continuous_scale='RdBu',
+        maxdepth=3
+    )
+    
+    fig.update_layout(
+        font=dict(size=14),
+        height=800,
+        margin=dict(t=40, l=0, r=0, b=0)
+    )
+    
+    save_path = os.path.join(FIGURES_DIR, "employee_explorer_interactive.html")
+    fig.write_html(save_path)
+    print(f"Saved {save_path}")
+    return fig
+
 def create_dashboard(df):
     """Create a comprehensive dashboard with multiple charts"""
     fig = make_subplots(
@@ -240,7 +270,7 @@ def create_dashboard(df):
     print(f"Saved {save_path}")
     return fig
 
-if __name__ == "__main__":
+def generate_all_figures():
     print("--- Generating Interactive Figures ---")
     try:
         df = load_data()
@@ -250,7 +280,11 @@ if __name__ == "__main__":
         create_monthly_trend(df)
         create_3d_scatter(df)
         create_delivery_by_country(df)
+        create_employee_explorer(df)
         create_dashboard(df)
         print("--- Interactive Figures Generated Successfully ---")
     except Exception as e:
         print(f"[ERROR] Failed to generate figures: {e}")
+
+if __name__ == "__main__":
+    generate_all_figures()
