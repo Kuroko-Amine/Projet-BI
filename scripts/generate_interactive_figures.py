@@ -5,7 +5,6 @@ from plotly.subplots import make_subplots
 import os
 from settings import DATA_DIR, FIGURES_DIR
 
-# Ensure figures directory exists
 os.makedirs(FIGURES_DIR, exist_ok=True)
 
 def load_data():
@@ -196,7 +195,6 @@ def create_dashboard(df):
                [{'type': 'scatter'}, {'type': 'bar'}]]
     )
     
-    # Delivery Status Pie
     delivery_counts = df['DeliveredFlag'].value_counts()
     fig.add_trace(
         go.Pie(labels=['Delivered', 'Not Delivered'],
@@ -205,7 +203,6 @@ def create_dashboard(df):
         row=1, col=1
     )
     
-    # Orders by Country
     country_orders = df['Country_x'].value_counts().head(5).reset_index()
     country_orders.columns = ['Country', 'Count']
     fig.add_trace(
@@ -214,7 +211,6 @@ def create_dashboard(df):
         row=1, col=2
     )
     
-    # Monthly Trend
     df['YearMonth'] = df['FullDate'].dt.to_period('M').astype(str)
     monthly = df.groupby('YearMonth').size().reset_index(name='Count')
     fig.add_trace(
@@ -223,7 +219,6 @@ def create_dashboard(df):
         row=2, col=1
     )
     
-    # Top Employees
     df['EmployeeName'] = df['FirstName'] + ' ' + df['LastName']
     employee_orders = df['EmployeeName'].value_counts().head(5).reset_index()
     employee_orders.columns = ['Employee', 'Count']

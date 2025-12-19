@@ -3,7 +3,6 @@ from extract_access import extract_from_access
 import os
 import sys
 
-# Ensure immediate output flushing
 sys.stdout.reconfigure(line_buffering=True)
 
 def main():
@@ -12,12 +11,10 @@ def main():
     print("==========================================")
     
     try:
-        # 1. Extract from SQL Server
         extract_from_sql()
         
         print("\n")
         
-        # 2. Extract from Access Database
         extract_from_access()
         
         print("\n")

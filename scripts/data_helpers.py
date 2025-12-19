@@ -1,4 +1,3 @@
-# data_helpers.py
 import pyodbc
 import pandas as pd
 from settings import ACCESS_DB_PATH, ACCESS_DRIVER

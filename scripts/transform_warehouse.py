@@ -11,27 +11,21 @@ def transform_and_load_warehouse():
     os.makedirs(warehouse_dir, exist_ok=True)
     
     try:
-        # Load extracted data
         print("Loading extracted CSVs...")
         dim_customer = pd.read_csv(os.path.join(extracted_dir, "DimCustomer.csv"))
         dim_employee = pd.read_csv(os.path.join(extracted_dir, "DimEmployee.csv"))
         dim_date = pd.read_csv(os.path.join(extracted_dir, "DimDate.csv"))
         fact_orders = pd.read_csv(os.path.join(extracted_dir, "FactOrders.csv"))
         
-        # Merge Data
-        # FactOrders -> DimCustomer
         print("Merging FactOrders with DimCustomer...")
         merged = fact_orders.merge(dim_customer, on="CustomerId", how="left")
         
-        # Merge -> DimEmployee
         print("Merging with DimEmployee...")
         merged = merged.merge(dim_employee, on="EmployeeId", how="left")
         
-        # Merge -> DimDate
         print("Merging with DimDate...")
         merged = merged.merge(dim_date, on="DateId", how="left")
         
-        # Save to Warehouse
         output_path = os.path.join(warehouse_dir, "merged_northwind.csv")
         merged.to_csv(output_path, index=False)
         print(f"Warehouse data saved to {output_path}")

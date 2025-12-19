@@ -1,4 +1,3 @@
-# database_manager.py
 import pyodbc
 from settings import SQL_SERVER, SQL_DATABASE, SQL_DRIVER
 
@@ -9,7 +8,6 @@ def setup_sql_server():
     """Ensures SQL Server DB and Schema exist."""
     print("--- Setting up SQL Server ---")
     
-    # 1. Create DB if missing
     try:
         conn = pyodbc.connect(get_sql_conn_str("master"), autocommit=True)
         cur = conn.cursor()
@@ -24,7 +22,6 @@ def setup_sql_server():
         print(f"[ERROR] Master DB connection failed: {e}")
         raise
 
-    # 2. Create Tables
     try:
         conn = pyodbc.connect(get_sql_conn_str(SQL_DATABASE), autocommit=True)
         cur = conn.cursor()
@@ -76,7 +73,6 @@ def clear_tables():
     """Truncates tables before load."""
     conn = pyodbc.connect(get_sql_conn_str(SQL_DATABASE), autocommit=True)
     cur = conn.cursor()
-    # Order matters for FK
     for t in ["FactOrders", "DimDate", "DimEmployee", "DimCustomer"]:
         try:
             cur.execute(f"DELETE FROM {t}")

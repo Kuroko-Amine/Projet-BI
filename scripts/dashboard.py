@@ -1,4 +1,3 @@
-# dashboard.py
 import os
 import pyodbc
 import pandas as pd
@@ -11,7 +10,6 @@ from settings import SQL_SERVER, SQL_DATABASE, FIGURES_DIR
 if not os.path.exists(FIGURES_DIR):
     os.makedirs(FIGURES_DIR)
 
-# Set visual style
 sns.set_theme(style="whitegrid")
 plt.rcParams['figure.figsize'] = (12, 6)
 plt.rcParams['savefig.dpi'] = 300
@@ -23,7 +21,6 @@ def get_connection():
 def generate_charts():
     conn = get_connection()
     
-    # 1. Orders by Country (Horizontal Bar)
     print("Generating: Orders by Country...")
     df = pd.read_sql("SELECT c.Country, COUNT(f.OrderId) as OrderCount FROM FactOrders f JOIN DimCustomer c ON f.CustomerId = c.CustomerId GROUP BY c.Country ORDER BY OrderCount DESC", conn)
     
@@ -36,7 +33,6 @@ def generate_charts():
     plt.savefig(f"{FIGURES_DIR}/orders_by_country.png")
     plt.close()
 
-    # 2. Daily Order Trend (Line Chart)
     print("Generating: Order Trend...")
     query = """
     SELECT FullDate, COUNT(OrderId) as DailyOrders 
@@ -49,20 +45,16 @@ def generate_charts():
     df = pd.read_sql(query, conn)
     
     plt.figure()
-    # Enhanced Line Chart
     sns.lineplot(data=df, x="FullDate", y="DailyOrders", color="#3498db", linewidth=3, marker="o", markersize=8, markerfacecolor="#e74c3c")
     plt.fill_between(df["FullDate"], df["DailyOrders"], color="#3498db", alpha=0.15)
     
-    # Titles and Labels
     plt.title("Daily Orders Timeline & Volume", fontsize=18, fontweight='bold', pad=20)
     plt.xlabel("Date", fontsize=12)
     plt.ylabel("Number of Orders", fontsize=12)
     
-    # Grid and Ticks
     plt.grid(True, linestyle='--', alpha=0.6)
     plt.xticks(rotation=45)
     
-    # Annotate peaks
     max_orders = df["DailyOrders"].max()
     max_date = df.loc[df["DailyOrders"].idxmax(), "FullDate"]
     plt.annotate(f'Peak: {max_orders}', xy=(max_date, max_orders), xytext=(max_date, max_orders + 1),
@@ -72,7 +64,6 @@ def generate_charts():
     plt.savefig(f"{FIGURES_DIR}/orders_trend.png")
     plt.close()
 
-    # 3. Employee Performance (Bar Chart)
     print("Generating: Employee Performance...")
     query = """
     SELECT e.FirstName, COUNT(f.OrderId) as Orders 

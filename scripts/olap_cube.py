@@ -1,4 +1,3 @@
-# olap_cube.py
 import pandas as pd
 import pyodbc
 from settings import SQL_SERVER, SQL_DATABASE, DATA_DIR, FIGURES_DIR
@@ -12,7 +11,6 @@ def generate_olap_report():
     print("--- Starting OLAP Cube Analysis ---")
     conn = get_connection()
     
-    # 1. Denormalize / Base Cube Creation
     print("Fetching and Denormalizing Data...")
     query = """
     SELECT 
@@ -31,8 +29,6 @@ def generate_olap_report():
     LEFT JOIN DimCustomer c ON f.CustomerId = c.CustomerId
     LEFT JOIN DimEmployee e ON f.EmployeeId = e.EmployeeId
     """
-    # Since DimDate might not have Year_ column explicitly created in previous steps (only Month/Day),
-    # we will fetch standard cols and derive Year in pandas for safety
     query_safe = """
     SELECT 
         f.OrderId,
@@ -50,7 +46,6 @@ def generate_olap_report():
     df = pd.read_sql(query_safe, conn)
     conn.close()
     
-    # Enhance Data (Pandas-based Cube Attributes)
     df["FullDate"] = pd.to_datetime(df["FullDate"])
     df["Year"] = df["FullDate"].dt.year
     df["Quarter"] = df["FullDate"].dt.quarter
@@ -58,31 +53,22 @@ def generate_olap_report():
     
     print(f"Base Cube Loaded: {len(df)} records.")
     
-    # ---------------- OLAP OPERATIONS ----------------
 
-    # Operation 1: Roll-up (Aggregation up a hierarchy)
-    # Roll-up from Individual Order -> Year/Country Aggregation
     rollup_year_country = df.groupby(["Year", "CustomerCountry"]).size().reset_index(name="TotalOrders")
     print("OLAP Operation: Roll-up (Year, Country) done.")
 
-    # Operation 2: Slice (Filtering a single dimension)
-    # Slice: Only USA Orders
     slice_usa = df[df["CustomerCountry"] == "USA"].copy()
     print(f"OLAP Operation: Slice (Country='USA') done. Records: {len(slice_usa)}")
 
-    # Operation 3: Dice (Sub-cube selection)
-    # Dice: USA or UK, Year 2006
     dice_usa_uk_2006 = df[
         (df["CustomerCountry"].isin(["USA", "UK"])) & 
         (df["Year"] == 2006)
     ].copy()
     print(f"OLAP Operation: Dice (USA/UK & 2006) done. Records: {len(dice_usa_uk_2006)}")
     
-    # Operation 4: Cross-tab / Pivot (Orders by Employee vs Country)
     pivot_emp_country = pd.crosstab(df["EmpFirstName"], df["CustomerCountry"], margins=True)
     print("OLAP Operation: Pivot (Employee vs Country) done.")
 
-    # ---------------- EXPORT ----------------
     output_path = os.path.join(FIGURES_DIR, "OLAP_Report.xlsx")
     print(f"Exporting to {output_path}...")
     

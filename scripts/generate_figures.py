@@ -6,7 +6,6 @@ import matplotlib.cm as cm
 import numpy as np
 from settings import DATA_DIR, FIGURES_DIR
 
-# Ensure figures directory exists
 os.makedirs(FIGURES_DIR, exist_ok=True)
 
 def load_data():
@@ -70,13 +69,10 @@ def plot_3d_orders(df):
     """
     from mpl_toolkits.mplot3d import Axes3D
     
-    # Prepare data
     df['MonthNum'] = df['FullDate'].dt.month
     
-    # Aggregate: Count orders by Month and Country
     agg = df.groupby(['MonthNum', 'Country_x']).size().reset_index(name='OrderCount')
     
-    # Map Country to numeric ID for plotting
     countries = agg['Country_x'].unique()
     country_map = {c: i for i, c in enumerate(countries)}
     agg['CountryId'] = agg['Country_x'].map(country_map)
@@ -84,8 +80,6 @@ def plot_3d_orders(df):
     fig = plt.figure(figsize=(12, 8))
     ax = fig.add_subplot(111, projection='3d')
     
-    # 3D Bar plot (using scatter for point representation, or bar3d for actual bars)
-    # Using scatter here for clarity in this specific density
     p = ax.scatter(
         agg['MonthNum'], 
         agg['CountryId'], 
@@ -101,7 +95,6 @@ def plot_3d_orders(df):
     ax.set_zlabel('Order Count')
     ax.set_title('3D View: Orders by Month and Country')
     
-    # Set Y-ticks to Country names
     ax.set_yticks(range(len(countries)))
     ax.set_yticklabels(countries)
     

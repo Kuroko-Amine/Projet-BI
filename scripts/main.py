@@ -1,4 +1,3 @@
-# main.py
 from database_manager import setup_sql_server
 from etl_pipeline import run_etl_pipeline
 

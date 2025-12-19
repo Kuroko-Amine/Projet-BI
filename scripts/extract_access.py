@@ -14,7 +14,7 @@ def get_access_conn():
         raise
 
 def extract_from_access():
-    """Extracts tables from Access DB and saves them as CSVs."""
+   
     print("--- Starting Extraction from Access Database ---")
     
     output_dir = os.path.join(DATA_DIR, "extracted")
@@ -22,17 +22,14 @@ def extract_from_access():
     
     conn = get_access_conn()
     
-    # List of tables to extract based on inspection
     tables = ["Customers", "Employees", "Orders", "Order Details", "Products"]
     
     try:
         for table in tables:
             print(f"Extracting {table}...")
-            # Enclose table name in brackets to handle spaces like 'Order Details'
             query = f"SELECT * FROM [{table}]"
             df = pd.read_sql(query, conn)
             
-            # Sanitize filename (remove spaces)
             safe_name = table.replace(" ", "_")
             output_path = os.path.join(output_dir, f"Access_{safe_name}.csv")
             
