@@ -2,7 +2,7 @@
 
 ## Project Structure
 - `/data`: Contains all source Excel files (`Orders.xlsx`, etc.).
-- `/scripts`: Contains the ETL (`script.py`) and Dashboard (`dashboard.py`) scripts.
+- `/scripts`: Contains the project scripts, including the entry point `main.py`.
 - `/figures`: Contains generated charts (`orders_by_country.png`, etc.).
 - `/reports`: Contains the assignment PDF.
 - `/notebooks`: Placeholder for Jupyter notebooks.
@@ -17,16 +17,17 @@
 
 ## Execution
 
-### ETL Process
-To load data from Excel to SQL Server:
-```bash
-python scripts/script.py
-```
-This will create the `Global_Northwind` database (if missing) and populate the tables.
+You can run the project using either the Python script or the provided Batch file.
 
-### Dashboard
-To generate visualization figures:
+### Option 1: Python Script
+Run the main pipeline script directly:
 ```bash
-python scripts/dashboard.py
+python scripts/main.py
+```
+
+### Option 2: Batch File
+Double-click `start_pipeline.bat` or run it from the command line:
+```bash
+start_pipeline.bat
 ```
 Check the `/figures` directory for the output images.
